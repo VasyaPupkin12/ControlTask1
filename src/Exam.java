@@ -1,5 +1,6 @@
 import java.io.BufferedWriter;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -9,41 +10,49 @@ public class Exam {
     ArrayList<Student> students;
     AbstractTeacher teacher;
 
-    public Exam(ArrayList<Student> students, AbstractTeacher teacher){
+    public Exam(ArrayList<Student> students, AbstractTeacher teacher) {
         this.students = students;
         this.teacher = teacher;
         result = new HashMap<>();
     }
 
-    public void start(){
-        teacher.mood = (int)Math.round(Math.random());
-        for(Student s : students)
-            result.put(s, teacher.testStudent(s));
+    public void start() {
+        teacher.setMood((int) Math.round(Math.random()));
+        students.forEach(s -> result.put(s, teacher.testStudent(s)));
     }
 
-    public void clearResult(){
+    public void clearResult() {
         result.clear();
         students.clear();
         teacher = null;
     }
 
-    public void writeReport(){
+    public void writeReport() {
         try {
-            BufferedWriter writer = new BufferedWriter(new FileWriter(teacher.study + ".txt"));
-            writer.write(String.format("Преподаватель %s, настроение %d\n", teacher.fullname, teacher.mood));
+            BufferedWriter writer = new BufferedWriter(new FileWriter(teacher.getStudy() + ".txt"));
+            StringBuilder str = new StringBuilder();
+            str.append("Преподаватель " + teacher.getFullname());
+            str.append(", настроение " + teacher.getMood() + "\n");
+            writer.write(str.toString());
             writer.newLine();
-            for(Map.Entry<Student, Boolean> s: result.entrySet()){
-                if(s.getValue() == Boolean.TRUE){
-                    writer.write(String.format("%s(IQ=%d) - сдал\n", s.getKey().fullname, s.getKey().iq));
+            ArrayList<StringBuilder> list = new ArrayList<>();
+            result.forEach((k, v) -> {
+                if (v == Boolean.TRUE) {
+                    StringBuilder buf = new StringBuilder();
+                    buf.append(k.getFullname() + "(IQ=" + k.getIq() + ")");
+                    buf.append("- сдал\n");
+                    list.add(buf);
+                } else {
+                    StringBuilder buf = new StringBuilder();
+                    buf.append(k.getFullname() + "(IQ=" + k.getIq() + ")");
+                    buf.append("- не сдал\n");
+                    list.add(buf);
                 }
-                else
-                {
-                    writer.write(String.format("%s(IQ=%d) - не сдал\n", s.getKey().fullname, s.getKey().iq));
-                }
-            }
+
+            });
+            for (StringBuilder s : list) writer.write(s.toString());
             writer.close();
-        }
-        catch (Exception e){
+        } catch (IOException e) {
             System.out.println(e.toString());
         }
     }
